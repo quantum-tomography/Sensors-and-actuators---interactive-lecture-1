@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />f
 <title>Sensors and actuators - interactive lecture 1</title>
 <style>
 :root { --bg:#0b1220; --card:#111a2e; --text:#e7eefc; --muted:#a8b3cf; --accent:#4da3ff; --good:#3ddc97; --bad:#ff5c7a; }
@@ -145,7 +145,25 @@ let state = { idx:0, quiz:{} };
 const $ = (sel) => document.querySelector(sel);
 function escapeHtml(str){ return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;"); }
 function paragraphsFromText(text){ return String(text || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean); }
-function renderContent(sl){ let pHtml = ""; paragraphsFromText(sl.text).forEach((p,i)=>{ const cls = i===0 ? (sl.useDropcap ? "lead dropcap" : "lead") : ""; pHtml += "<p class=\""+cls+"\">" + escapeHtml(p) + "</p>"; }); if(!pHtml){ pHtml = "<p class=\"lead dropcap\">Add slide text in the editor.</p>"; } let ul = ""; if((sl.bullets||[]).length){ ul = "<ul>"; sl.bullets.forEach(b=> ul += "<li>"+escapeHtml(b)+"</li>"); ul += "</ul>"; } return "<div class=\"h1\">"+escapeHtml(sl.title)+"</div><div class=\"book\">"+pHtml+ul+"</div>"; }
+function renderContent(sl){
+  let pHtml = "";
+  paragraphsFromText(sl.text).forEach((p,i)=>{
+    const cls = i===0 ? (sl.useDropcap ? "lead dropcap" : "lead") : "";
+    pHtml += "<p class=\"" + cls + "\">" + p + "</p>";
+  });
+
+  if(!pHtml){
+    pHtml = "<p class=\"lead dropcap\">Add slide text in the editor.</p>";
+  }
+
+  let ul = "";
+  if((sl.bullets||[]).length){
+    ul = "<ul>";
+    sl.bullets.forEach(b => ul += "<li>" + b + "</li>");
+    ul += "</ul>";
+  }
+
+  return "<div class=\"h1\">" + escapeHtml(sl.title) + "</div><div class=\"book\">" + pHtml + ul + "</div>"; }
 function renderQuiz(sl){ const prev = state.quiz[sl.id]; const chosen = prev && typeof prev.selectedIndex === "number" ? prev.selectedIndex : null; const answered = !!prev; let opts = ""; sl.options.forEach((txt,i)=>{ let cls = "qOpt"; if(answered){ if(i===sl.correctIndex) cls += " correct"; else if(i===chosen) cls += " wrong"; } opts += "<button class=\""+cls+"\" data-i=\""+i+"\" type=\"button\">"+escapeHtml(txt)+"</button>"; }); const fb = answered ? "<div class=\"qFeedback\">" + (prev.isCorrect ? "✅ Correct. " : "❌ Not quite. ") + escapeHtml(sl.explanation || "") + "</div>" : ""; return "<div class=\"quizBox\"><div class=\"qTitle\">"+escapeHtml(sl.title)+"</div><p class=\"qPrompt\">"+escapeHtml(sl.question||"")+"</p><div class=\"qOptions\">"+opts+"</div>"+fb+"</div>"; }
 function wireQuiz(sl){ document.querySelectorAll(".qOpt").forEach(btn => { btn.onclick = () => { const i = Number(btn.getAttribute("data-i")); state.quiz[sl.id] = { selectedIndex:i, isCorrect:i === sl.correctIndex }; render(); }; }); }
 function render(){ $("#courseTitle").textContent = lessonData.courseTitle; $("#courseSub").textContent = lessonData.courseSub; const goals = $("#goals"); goals.innerHTML = ""; (lessonData.learningOutcomes || []).forEach(g => { const li = document.createElement("li"); li.textContent = g; goals.appendChild(li); }); state.idx = Math.max(0, Math.min(state.idx, lessonData.slides.length - 1)); $("#slideCounter").textContent = (state.idx + 1) + " / " + lessonData.slides.length; $("#progressFill").style.width = (((state.idx + 1)/lessonData.slides.length) * 100) + "%"; const sl = lessonData.slides[state.idx]; $("#slide").innerHTML = sl.type === "quiz" ? renderQuiz(sl) : renderContent(sl); $("#statusLine").textContent = sl.type === "quiz" ? "Quick Check" : "Reading slide"; $("#btnPrev").disabled = state.idx === 0; $("#btnNext").disabled = state.idx === lessonData.slides.length - 1; if(sl.type === "quiz") wireQuiz(sl); }
